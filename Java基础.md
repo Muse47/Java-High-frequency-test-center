@@ -1,6 +1,8 @@
 # Java基础
 
-<br>
+[TOC]
+
+
 
 ## 1、List 和 Set 的区别
 
@@ -356,6 +358,7 @@ finalize是在Object类中定义的，因此，所有的类都继承了它。子
    
 
 
+
 在静态内部类中，经常会使用虚引用。例如：一个类发送网络请求，承担 callback 的静态内部类，则常以虚引用的方式来保存外部类的引用，当外部类需要被 JVM 回收时，不会因为网络请求没有及时回应，引起内存泄漏。
 
 ### 4、虚引用（Phantom Reference）
@@ -393,22 +396,23 @@ finalize是在Object类中定义的，因此，所有的类都继承了它。子
 
 ### 2. 如何使用java的反射?
 
-####a. 通过一个全限类名创建一个对象
+#### a. 通过一个全限类名创建一个对象
 
 1)、Class.forName("全限类名"); 例如：com.mysql.jdbc.Driver Driver类已经被加载到 jvm中，并且完成了类的初始化工作就行了
 
 2）、类名.class; 获取Class<？> clz 对象  
    3）、对象.getClass();   
 
-####b. 获取构造器对象，通过构造器new出一个对象
-    1）. Clazz.getConstructor([String.class]);
-    2）. Con.newInstance([参数]);
+#### b. 获取构造器对象，通过构造器new出一个对象
 
-####c. 通过class对象创建一个实例对象（就相当与new类名（）无参构造器)
+​    1）. Clazz.getConstructor([String.class]);
+​    2）. Con.newInstance([参数]);
+
+#### c. 通过class对象创建一个实例对象（就相当与new类名（）无参构造器)
 
      1）. Clazz.newInstance();
 
-####d. 通过class对象获得一个属性对象
+#### d. 通过class对象获得一个属性对象
 
 1）、Field c=clz.getFields()：获得某个类的所有的公共（public）的字段，包括父类中的字段。
 
@@ -421,7 +425,7 @@ finalize是在Object类中定义的，因此，所有的类都继承了它。子
 
    3) M.setAccessible(true);（让私有的方法可以执行）
 
-####f. 让方法执行
+#### f. 让方法执行
 
    1）. Method.invoke(obj实例对象,obj可变参数);-----（是有返回值的）
 
@@ -486,9 +490,9 @@ LinkedHashMap有5个构造方法，其中4个都是按插入顺序，只有一�
 
     public LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder)
 
-
 其中参数accessOrder就是用来指定是否按访问顺序，如果为true，就是访问顺序。
-###1.2 栗子
+
+### 1.2 栗子
 
 默认情况下，LinkedHashMap是按照插入顺序的，我们举个栗子:
 
@@ -531,8 +535,7 @@ LinkedHashMap有5个构造方法，其中4个都是按插入顺序，只有一�
     c 100
     d 300
 
-
-###1.3 使用按访问有序实现缓存
+### 1.3 使用按访问有序实现缓存
 
     import java.util.LinkedHashMap;
     import java.util.Map;
@@ -571,7 +574,7 @@ LinkedHashMap有5个构造方法，其中4个都是按插入顺序，只有一�
 
 
 
-###java的克隆分为深克隆和浅克隆：
+### java的克隆分为深克隆和浅克隆：
 
 了解克隆clone我们必须要了解
 
@@ -579,31 +582,31 @@ LinkedHashMap有5个构造方法，其中4个都是按插入顺序，只有一�
 2.其次，你要大概知道什么是地址传递，什么是值传递。
 3.最后，你要知道你为什么使用这个clone方法
 
-###Cloneable接口的作用：
+### Cloneable接口的作用：
 
 > Object类中的clone()是protected的方法，在没有重写Object的clone()方法且没有实现Cloneable接口的实例上调用clone方法，会报CloneNotSupportedException异常。
 > 
 > 实现Cloneable接口仅仅是用来指示Object类中的clone()方法可以用来合法的进行克隆，即实现了Cloneable接口在调用Object的clone方法时不会再报CloneNotSupportedException异常。
 
-###clone方法：
+### clone方法：
 
 > 类在重写clone方法的时候，要把clone方法的属性设置为public。
 
-
-###为什么需要克隆？
+#### 为什么需要克隆？
 
 > 在实际编程过程中，会需要创建与已经存在的对象A的值一样的对象B，但是是与A完全独立的一个对象，即对两个对象做修改互不影响，这时需要用克隆来创建对象B。通过new一个对象，然后各个属性赋值，也能实现该需求，但是clone方法是native方法，native方法的效率一般远高于非native方法。
 
+#### 怎么实现克隆？
 
-###怎么实现克隆？
 > 
 > 在要克隆的类要实现Cloneable接口和重写Object的clone()方法。
 
-###浅克隆
+#### 浅克隆
 
 > 对于Object类中的clone()方法产生的效果是：现在内存中开辟一块和原始对象一样的内存空间，然后原样拷贝原始对象中的内容。对基本数据类型来说，这样的操作不会有问题，但是对于非基本类型的变量，保存的仅仅是对象的引用，导致clone后的非基本类型变量和原始对象中相应的变量指向的是同一个对象，对非基本类型的变量的操作会相互影响。
 
-###深克隆
+#### 深克隆
+
 > 
 > 深克隆除了克隆自身对象，还对其非基本数据类型的成员变量克隆一遍。
 
@@ -615,7 +618,7 @@ LinkedHashMap有5个构造方法，其中4个都是按插入顺序，只有一�
 
 > 在数据结构比较复杂的情况下，序列化和反序列化可能实现起来简单，方法2）实现比较复杂。经测试2）会比1）的执行效率高。
 
-###结论：
+### 结论：
 
 1、克隆一个对象不会调用对象的构造方法。
 
