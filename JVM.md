@@ -34,7 +34,7 @@
 
 占用很小的一片区域，我们知道JVM执行代码是一行一行执行字节码，所以需要一个计数器来记录当前执行的行数。
 
-### 2、堆内存
+#### 2、堆内存
 
 堆内存是JVM内存中占用较大的一块区域，对象都在此地分配内存。在堆中，又分为新生代及老年代，新生代中又分三个区域，分别是Eden，Survivor To,Survivor From。堆内存是JVM调优的重点区域，也是这篇博客重点讨论的内容。
 
@@ -777,7 +777,7 @@ private class LazyIterator implements Iterator<S>{
 
 ## 7、类的实例化顺序
 
-## 普通类的初始化（不存在继承，内部类的时候）
+### 普通类的初始化（不存在继承，内部类的时候）
 
 为了更详细的验证类的初始化顺序，首先我创建了一个被另一个类使用的类**B.java**
 
@@ -890,7 +890,7 @@ run be called
 - 在A静态域初始化后，回到main()方法，打印出了“start running”(9),在new A()(10)的时候，分配a对象的空间，开始顺序初始化varOneInA(11)，varTwoInA(12)和b(13)，初始化b的时候因为不是第一次加载，所以staticVarOneInB，staticvarTwoInB不再被初始化，只是初始化了varOneInB(14)，varTwoInB(15)，然后执行构造B(16)。
 - 初始化完成后，调用A的构造器(17)；最后通过a.run()调用run(18)方法，打印出“run be called”。
 
-## 具有继承的类的初始化
+### 具有继承的类的初始化
 
 下面，我创建了一个Father类和一个继承Father类的Son类，来探究在有继承的时候类的初始化和加载，情况基本和上面类似，我就不再写太多的注释了。Father类如下：
 
@@ -965,7 +965,7 @@ Son constructor name:Bob
 - 在执行new Son("Bob")的时候，对基类也就是Father中的varInFather进行初始化，之后Father的构造器被调用。
 - 之后导出类变量varInSon被初始化，调用导出类Son的构造器。
 
-## 具有继承的静态内部类
+### 具有继承的静态内部类
 
 关于这个的讲解，我引用一道2015携程Java工程师笔试题。来自csdb博客[fuck两点水](https://link.jianshu.com?t=http://my.csdn.net/Two_Water)的[ 2015携程JAVA工程师笔试题(基础却又没多少人做对的面向对象面试题)](https://link.jianshu.com?t=http://blog.csdn.net/two_water/article/details/53891952)。题目如下：
 
@@ -1152,7 +1152,7 @@ FGC的时机：
 
 
 
-## 10、各种回收器，各自优缺点，重点CMS、G1
+## 10、各种回收器，各自优缺点，重点CMS、G1，11、各种回收算法
 
 ### 简述
 
@@ -1510,7 +1510,47 @@ G1收集器的运作大致可划分为以下几个步骤：
 
 
 
-## 11、各种回收算法
+## 
 
 ## 12、OOM错误，stackoverflow错误，permgen space错误
+
+
+
+### 1， OutOfMemoryError异常
+
+除了程序计数器外，虚拟机内存的其他几个运行时区域都有发生OutOfMemoryError(OOM)异常的可能，
+
+Java Heap 溢出
+
+一般的异常信息：java.lang.OutOfMemoryError:Java heap spacess
+
+java堆用于存储对象实例，我们只要不断的创建对象，并且保证GC Roots到对象之间有可达路径来避免垃圾回收机制清除这些对象，就会在对象数量达到最大堆容量限制后产生内存溢出异常。
+
+出现这种异常，一般手段是先通过内存映像分析工具(如Eclipse Memory Analyzer)对dump出来的堆转存快照进行分析，重点是确认内存中的对象是否是必要的，先分清是因为内存泄漏(Memory Leak)还是内存溢出(Memory Overflow)。
+
+如果是内存泄漏，可进一步通过工具查看泄漏对象到GC Roots的引用链。于是就能找到泄漏对象时通过怎样的路径与GC Roots相关联并导致垃圾收集器无法自动回收。
+
+如果不存在泄漏，那就应该检查虚拟机的参数(-Xmx与-Xms)的设置是否适当。
+
+### 2， 虚拟机栈和本地方法栈溢出
+
+如果线程请求的栈深度大于虚拟机所允许的最大深度，将抛出StackOverflowError异常。
+
+如果虚拟机在扩展栈时无法申请到足够的内存空间，则抛出OutOfMemoryError异常
+
+这里需要注意当栈的大小越大可分配的线程数就越少。
+
+### 3， 运行时常量池溢出
+
+异常信息：java.lang.OutOfMemoryError:PermGen space
+
+如果要向运行时常量池中添加内容，最简单的做法就是使用String.intern()这个Native方法。该方法的作用是：如果池中已经包含一个等于此String的字符串，则返回代表池中这个字符串的String对象；否则，将此String对象包含的字符串添加到常量池中，并且返回此String对象的引用。由于常量池分配在方法区内，我们可以通过-XX:PermSize和-XX:MaxPermSize限制方法区的大小，从而间接限制其中常量池的容量。
+
+### 4， 方法区溢出
+
+方法区用于存放Class的相关信息，如类名、访问修饰符、常量池、字段描述、方法描述等。
+
+异常信息：java.lang.OutOfMemoryError:PermGen space
+
+方法区溢出也是一种常见的内存溢出异常，一个类如果要被垃圾收集器回收，判定条件是很苛刻的。在经常动态生成大量Class的应用中，要特别注意这点。
 
