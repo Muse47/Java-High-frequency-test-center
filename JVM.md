@@ -777,9 +777,325 @@ private class LazyIterator implements Iterator<S>{
 
 ## 7、类的实例化顺序
 
+## 普通类的初始化（不存在继承，内部类的时候）
+
+为了更详细的验证类的初始化顺序，首先我创建了一个被另一个类使用的类**B.java**
+
+```
+public class B {
+    private int varOneInB = initInt("varOneInB"); // 6 14
+    private static int staticVarOneInB = initInt("staticVarOneB");  // 4  
+    private int varTwoInB = initInt("varTwoInB"); // 7 15
+    private static int staticvarTwoInB = initInt("staticvarTwoInB"); // 5
+    
+    /**
+     * 构造方法
+     */
+    public B() {
+        System.out.println("B  constructor"); // 8 16
+    }
+    
+    /**
+     * 用于对int类型的变量赋值
+     * @param varName
+     * @return
+     */
+    private static int initInt(String varName) {
+        System.out.println(varName + " init");
+        return 2017;
+    }
+}
+```
+
+然后我创建了一个**A**类来验证初始化顺序，并且在该类中同时使用的static变量和static块等。
+
+```
+public class A {
+    private int varOneInA = initInt("varOneInA"); // 11
+    private static int staticVarOneInA = initInt("staticVarOneInA"); // 1 
+    {
+          int varTwoInA = initInt("varTwoInA"); // 12
+    }
+    static {
+          int staticvarTwoInA = initInt("staticvarTwoInA");  // 2
+    }
+    private B b = new B(); // 13
+    private static B staticB = new B(); // 3
+    
+    /**
+     * 构造方法
+     */
+    public A() {
+        System.out.println("A  constructor"); // 17
+    }
+    
+    /**
+     * 用于对int型变量赋值
+     * @param varName
+     * @return
+     */
+    private static int initInt(String varName) {
+        System.out.println(varName + " init");
+        return 2017;
+    }
+    
+    public void run() {
+        System.out.println("run be called");// 23
+    }
+    
+    public static void main (String[] args) {
+        System.out.println("start running");// 9
+        A a = new A();// 10
+        a.run();// 18
+    }
+}
+```
+
+运行后结果为：
+
+```
+staticVarOneInA init
+staticvarTwoInA init
+staticVarOneB init
+staticvarTwoInB init
+varOneInB init
+varTwoInB init
+B  constructor
+start running
+varOneInA init
+varTwoInA init
+varOneInB init
+varTwoInB init
+B  constructor
+A  constructor
+run be called
+```
+
+对《Think in java》这本书里面的关于初始化顺序的总结进行归纳如下：
+
+> **注意：**即使变量定义散布于方法定义之间，它们仍旧会在任何方法（包括构造器）被调用之前得到初始化。
+
+1. 即使没有显示地使用static关键字，构造器实际上也是静态方法。因此，当首次创建类的对象时（构造器可以看出静态方法），或者类的静态方法/静态域被首次访问时，Java解释器必须查找类路径。
+2. 然后载入class，有关静态初始化的所有动作都会执行（所以静态初始化只在Class对象首次被加载的时候进行一次）。
+3. 当使用new创建对象的时候，首先将在堆上为对象分配足够的存储空间。
+4. 这块存储空间会被清零，这就自动将Dog对象中的所有基本类型数据都设置成了默认值（对数字来说就是0，对布尔类型和字符类型也相同），而引用就则被设置成了null。
+5. 执行出现于字段定义出的初始化动作。
+6. 执行构造器。
+
+有了上面的知识点，再来看上面的结果。我用数字1 2 3做了标记，括号后的阿拉伯数字表示上面代码对应的地方。
+
+- 在类A中执行main方法，由于main()是静态方法，必须加载A类，然后起静态域staticVarOneInA(1)，staticvarTwoInA(2)，staticB(3)被初始化。
+- 在staticB被初始化的时候，导致B类被加载，因为是第一次加载，对静态域进行初始化，因此staticVarOneInB(4)，staticvarTwoInB(5)被初始化。
+- 之后顺序初始化varOneInB(6)，varTwoInB(7)，执行构造器B(8)。
+- 在A静态域初始化后，回到main()方法，打印出了“start running”(9),在new A()(10)的时候，分配a对象的空间，开始顺序初始化varOneInA(11)，varTwoInA(12)和b(13)，初始化b的时候因为不是第一次加载，所以staticVarOneInB，staticvarTwoInB不再被初始化，只是初始化了varOneInB(14)，varTwoInB(15)，然后执行构造B(16)。
+- 初始化完成后，调用A的构造器(17)；最后通过a.run()调用run(18)方法，打印出“run be called”。
+
+## 具有继承的类的初始化
+
+下面，我创建了一个Father类和一个继承Father类的Son类，来探究在有继承的时候类的初始化和加载，情况基本和上面类似，我就不再写太多的注释了。Father类如下：
+
+```
+public class Father {
+    private int varInFather = initInt("varInFather");
+    private static int staticVarInFather = initInt("staticVarInFather");
+    
+    public Father(String name) {
+        System.out.println("Father constructor" + " name:" + name);
+    }
+    
+    private static int initInt(String varName) {
+        System.out.println(varName + " init");
+        return 2017;
+    }
+}
+```
+
+Son.java如下：
+
+```
+public class Son extends Father{
+    private int varInSon = initInt("varInSon");
+    private static int staticVarInSon = initInt("staticVarInSon");
+    
+    public Son(String name) {
+        super(name);
+        System.out.println("Son constructor" + " name:" + name);
+    }
+    
+    private static int initInt(String varName) {
+        System.out.println(varName + " init");
+        return 2017;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("start running");
+        Son son = new Son("Bob");
+    }
+}
+```
+
+输出结果如下；
+
+```
+staticVarInFather init
+staticVarInSon init
+start running
+varInFather init
+Father constructor name:Bob
+varInSon init
+Son constructor name:Bob
+```
+
+同样的，我将《Think in java》中的关于继承的类加载和初始化归纳如下：
+
+> **注意：**即使变量定义散布于方法定义之间，它们仍旧会在任何方法（包括构造器）被调用之前得到初始化。
+
+1. （同上）即使没有显示地使用static关键字，构造器实际上也是静态方法。因此，当首次创建类的对象时（构造器可以看出静态方法），或者类的静态方法/静态域被首次访问时，Java解释器必须查找类路径，在对它进行加载的过程中，编译器注意到它有一个基类（有extends得知），于是它继续加载，不管你时候打算产生一个该基类的对象。如果该基类还有其自身的基类，那么第二个基类就会被加载，如此类推。
+2. 接下来，根基类的static初始化会被执行，然后是下一个导出类，如此类推。
+3. 必要的类加载完成后，对象就可以被创建。同样的，首先对象中所有的基本类型都会被设为默认值，对象引用被设为null——通过将对象内存设为二进制零值而一举生成。
+4. 然后基类的构造器会被调用。基类构造器和导出类的构造器一样，以相同的顺序来经历相同的过程。
+5. 在基类构造器完成之后，实例变量按其次序被初始化。
+6. 最后，构造器的其余部分被执行。
+
+在有了上述归纳后，我们来分析上面程序的结果。
+
+- 在类Son中执行main方法，由于main()是静态方法，必须加载Son类，在加载的时候发现其有父类Father，进而加载Father类。
+- Father类被加载的时候，其静态变量staticVarInFather被初始化，之后Son类中的静态变量staticVarInSon被初始化。
+- 回到main方法，打印出“start running”
+- 在执行new Son("Bob")的时候，对基类也就是Father中的varInFather进行初始化，之后Father的构造器被调用。
+- 之后导出类变量varInSon被初始化，调用导出类Son的构造器。
+
+## 具有继承的静态内部类
+
+关于这个的讲解，我引用一道2015携程Java工程师笔试题。来自csdb博客[fuck两点水](https://link.jianshu.com?t=http://my.csdn.net/Two_Water)的[ 2015携程JAVA工程师笔试题(基础却又没多少人做对的面向对象面试题)](https://link.jianshu.com?t=http://blog.csdn.net/two_water/article/details/53891952)。题目如下：
+
+```
+public class Base
+{
+    private String baseName = "base";
+    public Base()
+    {
+        callName();
+    }
+
+    public void callName()
+    {
+        System. out. println(baseName);
+    }
+
+    static class Sub extends Base
+    {
+        private String baseName = "sub";
+        public void callName()
+        {
+            System. out. println (baseName) ;
+        }
+    }
+    public static void main(String[] args)
+    {
+        Base b = new Sub();
+    }
+}
+```
+
+当时看到这道题的时候，关于类的加载，初始化基本已经忘记，所以直接做错。该题的正确答案是：
+
+```
+null
+```
+
+为什么是null?首先我们从上面的内容可以了解到，类的初始化顺序是：
+
+> 父类静态块 ->子类静态块 ->父类初始化语句 ->父类构造函器 ->子类初始化语句 子类构造器。
+
+其实在掌握了我上面说的东西后，这道题的的答案为什么为null,已经是“柳暗花明又一村了”；所以我这里直接把[fuck两点水](https://link.jianshu.com?t=http://my.csdn.net/Two_Water)博客上的内容摘抄过来
+
+1. Base b = new Sub();在 main方法中声明父类变量b对子类的引用，JAVA类加载器将Base,Sub类加载到JVM;也就是完成了 Base 类和 Sub 类的初始化
+2. JVM 为 Base,Sub 的的成员开辟内存空间且值均为null;在初始化Sub对象前，首先JAVA虚拟机就在堆区开辟内存并将子类 Sub 中的 baseName 和父类 Base 中的 baseName（已被隐藏）均赋为 null，就是子类继承父类的时候，同名的属性不会覆盖父类，只是会将父类的同名属性隐藏
+3. 调用父类的无参构造调用 Sub 的构造函数，因为子类没有重写构造函数，默认调用无参的构造函数，调用了 super() 。
+4. callName 在子类中被重写，因此调用子类的 callName();调用了父类的构造函数，父类的构造函数中调用了 callName 方法，此时父类中的 baseName 的值为 base，可是子类重写了 callName 方法，且 调用父类 Base 中的 callName 是在子类 Sub 中调用的，因此当前的 this 指向的是子类，也就是说是实现子类的 callName 方法
+5. 调用子类的callName，打印baseName
+
+实际上在new Sub()时，实际执行过程为：
+
+```
+public Sub(){
+    super();
+    baseName = "sub"; 
+}
+```
+
+可见，在 baseName = “sub” 执行前，子类的 callName() 已经执行，所以子类的 baseName 为默认值状态 null 。
+   上面的题，大家可以试着把子类中的baseName使用static进行修饰，看看会得到什么结果，加深自己的理解。
+   关于类的加载和初始化的备忘录就到此结束了。
+
 ## 8、JVM垃圾回收机制，何时触发MinorGC等操作
 
+GC，即就是Java垃圾回收机制。目前主流的JVM（HotSpot）采用的是分代收集算法。与C++不同的是，Java采用的是类似于树形结构的可达性分析法来判断对象是否还存在引用。即：从gcroot开始，把所有可以搜索得到的对象标记为存活对象。
+
+### GC机制
+
+要准确理解Java的垃圾回收机制，就要从：“什么时候”，“对什么东西”，“做了什么”三个方面来具体分析。
+
+第一：“什么时候”即就是GC触发的条件。GC触发的条件有两种。（1）程序调用System.gc时可以触发；（2）系统自身来决定GC触发的时机。
+
+系统判断GC触发的依据：根据Eden区和From Space区的内存大小来决定。当内存大小不足时，则会启动GC线程并停止应用线程。
+
+第二：“对什么东西”笼统的认为是Java对象并没有错。但是准确来讲，GC操作的对象分为：通过可达性分析法无法搜索到的对象和可以搜索到的对象。对于搜索不到的方法进行标记。
+
+第三：“做了什么”最浅显的理解为释放对象。但是从GC的底层机制可以看出，对于可以搜索到的对象进行复制操作，对于搜索不到的对象，调用finalize()方法进行释放。
+
+具体过程：当GC线程启动时，会通过可达性分析法把Eden区和From Space区的存活对象复制到To Space区，然后把Eden Space和From Space区的对象释放掉。当GC轮训扫描To Space区一定次数后，把依然存活的对象复制到老年代，然后释放To Space区的对象。
+
+对于用可达性分析法搜索不到的对象，GC并不一定会回收该对象。要完全回收一个对象，至少需要经过两次标记的过程。
+
+第一次标记：对于一个没有其他引用的对象，筛选该对象是否有必要执行finalize()方法，如果没有执行必要，则意味可直接回收。（筛选依据：是否复写或执行过finalize()方法；因为finalize方法只能被执行一次）。
+
+第二次标记：如果被筛选判定位有必要执行，则会放入FQueue队列，并自动创建一个低优先级的finalize线程来执行释放操作。如果在一个对象释放前被其他对象引用，则该对象会被移除FQueue队列。
+
+### GC过程中用到的回收算法：
+
+通过上面的GC过程不难看出，Java堆中的年轻代和老年代采用了不同的回收算法。年轻代采用了复制法；而老年代采用了标记-整理法
+
+具体各种回收算法的详解参考：http://www.cnblogs.com/dolphin0520/p/3783345.html
+
+### JVM内存空间图解
+
+ ![](https://img-blog.csdn.net/20160917225930028?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+
+程序计数器：线程私有。是一块较小的内存，是当前线程所执行的字节码的行号指示器。是Java虚拟机规范中唯一没有规定OOM（OutOfMemoryError）的区域。
+
+Java栈：线程私有。生命周期和线程相同。是Java方法执行的内存模型。执行每个方法都会创建一个栈帧，用于存储局部变量和操作数（对象引用）。局部变量所需要的内存空间大小在编译期间完成分配。所以栈帧的大小不会改变。存在两种异常情况：若线程请求深度大于栈的深度，抛StackOverflowError。若栈在动态扩展时无法请求足够内存，抛OOM。
+
+Java堆：所有线程共享。虚拟机启动时创建。存放对象实力和数组。所占内存最大。分为新生代（Young区），老年代（Old区）。新生代分Eden区，Survivor区。Survivor区又分为From space区和To Space区。Eden区和Survivor区的内存比为8:1。 当扩展内存大于可用内存，抛OOM。
+
+方法区：所有线程共享。用于存储已被虚拟机加载的类信息、常量、静态变量等数据。又称为非堆（Non – Heap）。方法区又称“永久代”。GC很少在这个区域进行，但不代表不会回收。这个区域回收目标主要是针对常量池的回收和对类型的卸载。当内存申请大于实际可用内存，抛OOM。
+
+本地方法栈：线程私有。与Java栈类似，但是不是为Java方法（字节码）服务，而是为本地非Java方法服务。也会抛StackOverflowError和OOM。
+
+ 
+
+###  Minor GC ，Full GC 触发条件
+
+Minor GC触发条件：当Eden区满时，触发Minor GC。
+
+Full GC触发条件：
+
+（1）调用System.gc时，系统建议执行Full GC，但是不必然执行
+
+（2）老年代空间不足
+
+（3）方法去空间不足
+
+（4）通过Minor GC后进入老年代的平均大小大于老年代的可用内存
+
+（5）由Eden区、From Space区向To Space区复制时，对象大小大于To Space可用内存，则把该对象转存到老年代，且老年代的可用内存小于该对象大小
+
+
+
 ## 9、JVM 中一次完整的 GC 流程（从 ygc 到 fgc）是怎样的
+
+
 
 ## 10、各种回收器，各自优缺点，重点CMS、G1
 
