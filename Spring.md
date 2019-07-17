@@ -1,5 +1,9 @@
 # Spring
 
+[TOC]
+
+
+
 # 1、BeanFactory 和 FactoryBean？
 
 **共同点**：
