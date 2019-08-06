@@ -358,7 +358,8 @@ JMM比较庞大，不是上面一点点就能够阐述的。上面简单地介�
 volatile暂且下分析到这里，JMM体系较为庞大，不是三言两语能够说清楚的，后面会结合JMM再一次对volatile深入分析。
 
 ![](https://images2015.cnblogs.com/blog/381060/201702/381060-20170208174537963-1251333114.jpg)
-###总结
+
+### 总结
 
 volatile看起来简单，但是要想理解它还是比较难的，这里只是对其进行基本的了解。volatile相对于synchronized稍微轻量些，在某些场合它可以替代synchronized，但是又不能完全取代synchronized，只有在某些场合才能够使用volatile。使用它必须满足如下两个条件：
 
@@ -455,12 +456,12 @@ synchronized是Java中的关键字，是一种同步锁。它修饰的对象有�
 ​    System.out.println("tag b set number over");
 ​    }
 ​     
-    System.out.println("tag = "+ arg + ";num ="+ num);
-    } catch (InterruptedException e) {
-    e.printStackTrace();
-    }
-    }
-     
+​    System.out.println("tag = "+ arg + ";num ="+ num);
+​    } catch (InterruptedException e) {
+​    e.printStackTrace();
+​    }
+​    }
+​     
     public static void main(String[] args) {
     final SynchronizedTest m1 = new SynchronizedTest();
     final SynchronizedTest m2 = new SynchronizedTest();
