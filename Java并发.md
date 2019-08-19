@@ -314,6 +314,7 @@ Java提供了volatile来保证可见性。
 当一个变量被volatile修饰后，表示着线程本地内存无效，当一个线程修改共享变量后他会立即被更新到主内存中，当其他线程读取共享变量时，它会直接从主内存中读取。
 当然，synchronize和锁都可以保证可见性。
 有序性
+
 > 
 > 有序性：即程序执行的顺序按照代码的先后顺序执行。
 
@@ -378,8 +379,7 @@ Semaphore是Java1.5之后提供的一种同步工具，Semaphore可以维护访�
 
 Semaphore实现的功能就类似厕所有5个坑，假如有10个人要上厕所，那么同时只能有多少个人去上厕所呢？同时只能有5个人能够占用，当5个人中 的任何一个人让开后，其中等待的另外5个人中又有一个人可以去占用了。另外等待的5个人中可以是随机获得优先机会，也可以是按照先来后到的顺序获得机会，这取决于构造Semaphore对象时传入的参数选项。单个信号量的Semaphore对象可以实现互斥锁的功能，并且可以是由一个线程获得了“锁”，再由另一个线程释放“锁”，这可应用于死锁恢复的一些场合，所以单个信号量的Semaphore对象的功能就和synchronized实现互斥是共同的
 
-
-###2、功能扩展
+### 2、功能扩展
 
 1、Semaphore往往结合线程池使用，比如建立一个固定大小为10的线程池，最多线程并发数为10个，当你提交20个任务到线程池的时候，线程池会安排这10个线程优先接待20个任务中的10个，当优先安排的10个中有完成的会去接待剩下的10个任务中的某一个任务，直到执行完所有任务为止。但是如果此时引入了Semaphore对象，所传的值是5的时候，那么这线程池中10个线程只有5个能够并发执行，此时就做到了限量访问的作用。
 
@@ -462,12 +462,12 @@ synchronized是Java中的关键字，是一种同步锁。它修饰的对象有�
 ​    }
 ​    }
 ​     
-    public static void main(String[] args) {
-    final SynchronizedTest m1 = new SynchronizedTest();
-    final SynchronizedTest m2 = new SynchronizedTest();
-     
-    Thread t1 = new Thread(new Runnable() {
-     
+​    public static void main(String[] args) {
+​    final SynchronizedTest m1 = new SynchronizedTest();
+​    final SynchronizedTest m2 = new SynchronizedTest();
+​     
+​    Thread t1 = new Thread(new Runnable() {
+​     
     @Override
     public void run() {
     m1.method01("a");
@@ -837,7 +837,6 @@ Hashtable 表示键/值对的集合，这些键/值对根据键的哈希代码�
 
 我们在来看一下Dictionary对象，可以使它基类提供的SyncRoot属性，来实现它内部对象的线程安全　　
 
-            Dictionary<string, string> dic = new Dictionary<string, string>();
             lock ((dic as ICollection).SyncRoot)
             {
                 dic.Add("ok", "ok value");
