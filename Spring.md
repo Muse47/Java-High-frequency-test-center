@@ -20,6 +20,14 @@
 
 ​             它的实现与设计模式中的工厂模式和修饰器模式类似。
 
+
+
+BeanFactory和FactoryBean的区别
+
+​      BeanFactory是接口，提供了OC容器最基本的形式，给具体的IOC容器的实现提供了规范，
+
+​      FactoryBean也是接口，为IOC容器中Bean的实现提供了更加灵活的方式，FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式(如果想了解装饰模式参考：[修饰者模式(装饰者模式，Decoration)](https://www.cnblogs.com/aspirant/p/9083082.html) 我们可以在getObject()方法中灵活配置。其实在Spring源码中有很多FactoryBean的实现类.
+
  
 
 ## 1、 BeanFactory
@@ -719,7 +727,7 @@ spring容器可以理解为生产对象（OBJECT）的地方，在这里容器�
 
 Spring容器最基本的接口就是BeanFactory。BeanFactory负责配置、创建、管理Bean，它有一个子接口ApplicationContext，也被称为Spring上下文，容器同时还管理着Bean和Bean之间的依赖关系。
  **spring Ioc容器的实现，从根源上是beanfactory，但真正可以作为一个可以独立使用的ioc容器还是DefaultListableBeanFactory，因此可以这么说， DefaultListableBeanFactory 是整个spring ioc的始祖。**
- 
+
 
 
 
@@ -2160,10 +2168,10 @@ main() {
 
 
 ​     
-    //@RunWith(SpringJUnit4ClassRunner.class)
-    //@ContextConfiguration(locations = { "classpath:/spring-ibatis.xml", "classpath:/spring-jdbctemplate.xml" })
-    public class TestStudentDao {
-     
+​    //@RunWith(SpringJUnit4ClassRunner.class)
+​    //@ContextConfiguration(locations = { "classpath:/spring-ibatis.xml", "classpath:/spring-jdbctemplate.xml" })
+​    public class TestStudentDao {
+​     
     	public static void main(String[] args) {
     		  try {
     		  BeanFactory factory = new ClassPathXmlApplicationContext("spring-jdbctemplate.xml");
